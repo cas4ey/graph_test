@@ -21,7 +21,7 @@
 #           : You should have received a copy of the GNU General Public License
 #           : along with BehaviorStudio. If not, see <http://www.gnu.org/licenses/>.
 #           :
-#           : A copy of the GNU General Public License can be found in file COPYING.
+#           : A copy of the GNU General Public License can be found in file LICENSE.
 ############################################################################
 
 """
