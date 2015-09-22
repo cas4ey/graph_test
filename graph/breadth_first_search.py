@@ -41,14 +41,6 @@ from .graph import Path
 #######################################################################################################################
 
 
-class _StackEntry(object):
-
-    def __init__(self, node, it):
-        object.__init__(self)
-        self.node = node
-        self.keys = it
-
-
 def breadth_first_search(begin, end, graph):
     start = graph.node(begin)
     if start is None:
@@ -62,12 +54,12 @@ def breadth_first_search(begin, end, graph):
         visited_nodes.append(start.id())
 
     path = []
-    stack = [_StackEntry(start, iter(start.edges()))]
-    while stack:
-        go_next = False
-        current = stack[-1]
-        edges = current.node.edges()
-        for uid in current.keys:
+    queue = [start]
+    finish_found = False
+    while queue and not finish_found:
+        current = queue.pop(0)
+        edges = current.edges()
+        for uid in edges:
             edge = graph.edge(uid)
             if edge is None:
                 continue
@@ -78,20 +70,25 @@ def breadth_first_search(begin, end, graph):
             tail = graph.node(edge_info.tail())
             if head is None or tail is None:
                 continue
-            entry = (head, tail, edge)
-            path.append(entry)
+            path.append((current, tail, edge))
             if tail.id() == finish.id():
-                return Path(path)
-            go_next = True
-            stack.append(_StackEntry(tail, iter(tail.edges())))
+                finish_found = True
+                break
+            queue.append(tail)
             visited_nodes.append(tail.id())
-            break
-        if not go_next:
-            stack.pop()
-            try:
-                path.pop()
-            except IndexError:
-                pass
+    if finish_found and path:
+        resulting_path = [path[-1]]
+        if len(path) > 1:
+            prev_id = path[-1][0].id()
+            for i in range(-2, -len(path), -1):
+                head, tail, edge = path[i]
+                if tail.id() == prev_id:
+                    resulting_path.append(path[i])
+                    prev_id = head.id()
+                    if prev_id == start.id():
+                        break
+            resulting_path.reverse()
+        return Path(resulting_path)
     return Path()
 
 #######################################################################################################################

@@ -37,7 +37,9 @@ __email__ = 'victor.zarubkin@gmail.com'
 
 from PySide.QtCore import *
 from PySide.QtGui import *
-from graph import graph, depth_first_search as search
+from graph import graph
+from graph.depth_first_search import depth_first_search as dfs
+from graph.breadth_first_search import breadth_first_search as bfs
 import diagram
 
 #######################################################################################################################
@@ -166,9 +168,24 @@ class Scene(QGraphicsScene):
             if call_update:
                 self.update()
         elif k == Qt.Key_1:
+            # Depth-First Search
             self._cleanHighlight()
             if self._begin != 0 and self._end != 0:
-                path = search.depth_first_search(self._begin, self._end, graph.graph)
+                path = dfs(self._begin, self._end, graph.graph)
+                if path:
+                    highlighted = False
+                    for edge_info in path:
+                        if not highlighted:
+                            highlighted = True
+                            self.node(edge_info.head()).highlight(Qt.green)
+                        self.node(edge_info.tail()).highlight(Qt.red)
+                        self.edge(edge_info.id()).highlight(Qt.red)
+            self.update()
+        elif k == Qt.Key_2:
+            # Breadth-First Search
+            self._cleanHighlight()
+            if self._begin != 0 and self._end != 0:
+                path = bfs(self._begin, self._end, graph.graph)
                 if path:
                     highlighted = False
                     for edge_info in path:
