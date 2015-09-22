@@ -169,41 +169,37 @@ class Scene(QGraphicsScene):
                 self.update()
         elif k == Qt.Key_1:
             # Depth-First Search
-            self._cleanHighlight()
-            if self._begin != 0 and self._end != 0:
-                path = dfs(self._begin, self._end, graph.graph)
-                if path:
-                    highlighted = False
-                    for edge_info in path:
-                        if not highlighted:
-                            highlighted = True
-                            self.node(edge_info.head()).highlight(Qt.green)
-                        self.node(edge_info.tail()).highlight(Qt.red)
-                        self.edge(edge_info.id()).highlight(Qt.red)
-            self.update()
+            path = self._runSearch(dfs)
+            if path:
+                self._cleanHighlight()
+                self._highlightPath(path)
+                self.update()
         elif k == Qt.Key_2:
             # Breadth-First Search
-            self._cleanHighlight()
-            if self._begin != 0 and self._end != 0:
-                path = bfs(self._begin, self._end, graph.graph)
-                if path:
-                    highlighted = False
-                    for edge_info in path:
-                        if not highlighted:
-                            highlighted = True
-                            self.node(edge_info.head()).highlight(Qt.green)
-                        self.node(edge_info.tail()).highlight(Qt.red)
-                        self.edge(edge_info.id()).highlight(Qt.red)
-            self.update()
+            path = self._runSearch(bfs)
+            if path:
+                self._cleanHighlight()
+                self._highlightPath(path)
+                self.update()
+        elif k == Qt.Key_3:
+            # Dijkstra's Search
+            path = self._runSearch(None)
+            if path:
+                self._cleanHighlight()
+                self._highlightPath(path)
+                self.update()
+        elif k == Qt.Key_4:
+            # A* Search
+            path = self._runSearch(None)
+            if path:
+                self._cleanHighlight()
+                self._highlightPath(path)
+                self.update()
         elif k == Qt.Key_0:
             self._cleanHighlight()
             self.update()
         if k != Qt.Key_Control:
             QGraphicsScene.keyPressEvent(self, event)
-
-    def _cleanHighlight(self):
-        list(map(lambda x: self._nodes[x].highlight(), self._nodes.keys()))
-        list(map(lambda x: self._edges[x].highlight(), self._edges.keys()))
 
     def keyReleaseEvent(self, event):
         global _keysPressed
@@ -214,6 +210,27 @@ class Scene(QGraphicsScene):
         if event.key() == Qt.Key_Control:
             self.clearSelection()
         QGraphicsScene.keyReleaseEvent(self, event)
+
+    def _cleanHighlight(self):
+        list(map(lambda x: self._nodes[x].highlight(), self._nodes.keys()))
+        list(map(lambda x: self._edges[x].highlight(), self._edges.keys()))
+
+    def _highlightPath(self, path):
+        if path:
+            highlighted = False
+            for edge_info in path:
+                if not highlighted:
+                    highlighted = True
+                    self.node(edge_info.head()).highlight(Qt.green)
+                self.node(edge_info.tail()).highlight(Qt.red)
+                self.edge(edge_info.id()).highlight(Qt.red)
+            return True
+        return False
+
+    def _runSearch(self, search_algorithm):
+        if self._begin != 0 and self._end != 0 and search_algorithm is not None:
+            return search_algorithm(self._begin, self._end, graph.graph)
+        return []
 
 #######################################################################################################################
 #######################################################################################################################
