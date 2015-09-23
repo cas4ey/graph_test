@@ -46,13 +46,10 @@ def breadth_first_search(begin, end, graph):
     if start is None:
         return Path()
     finish = graph.node(end)
-    if finish is None:
+    if finish is None or finish.id() == start.id():
         return Path()
 
-    visited_nodes = []
-    if start.id() != finish.id():
-        visited_nodes.append(start.id())
-
+    visited_nodes = [start.id()]
     path = []
     queue = [start]
     finish_found = False
