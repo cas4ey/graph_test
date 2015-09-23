@@ -41,12 +41,16 @@ from .graph import Path
 #######################################################################################################################
 
 
-class _StackEntry(object):
+class _DijkstraNode(object):
 
-    def __init__(self, node, it):
+    def __init__(self, node, cost, parent, edge):
         object.__init__(self)
+        self.id = node.id()
+        self.parent_id = parent.id() if parent is not None else 0
         self.node = node
-        self.keys = it
+        self.parent = parent
+        self.edge = edge
+        self.cost = cost
 
 
 def dijkstra_search(begin, end, graph):
@@ -54,13 +58,15 @@ def dijkstra_search(begin, end, graph):
     if start is None:
         return Path()
     finish = graph.node(end)
-    if finish is None:
+    if finish is None or finish.id() == start.id():
         return Path()
 
-    visited_nodes = []
-    if start.id() != finish.id():
-        visited_nodes.append(start.id())
+    nodes = {}
+    for node_id in graph.nodes():
+        node = graph.node(node_id)
+        nodes[node_id] = _DijkstraNode(node, 1e28, None, None)
 
+    visited_nodes = [start.id()]
     path = []
     stack = [_StackEntry(start, iter(start.edges()))]
     while stack:
