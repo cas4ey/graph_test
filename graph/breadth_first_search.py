@@ -80,7 +80,7 @@ def breadth_first_search(begin, end, graph):
         resulting_path = [path[-1]]
         if len(path) > 1:
             prev_id = path[-1][0].id()
-            for i in range(-2, -len(path), -1):
+            for i in range(-2, -(len(path) + 1), -1):
                 head, tail, edge = path[i]
                 if tail.id() == prev_id:
                     resulting_path.append(path[i])
