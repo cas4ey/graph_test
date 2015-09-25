@@ -62,6 +62,17 @@ class Scene(QGraphicsScene):
         QGraphicsScene.__init__(self, parent)
         self._view = parent
 
+        self._keyHandlers = {
+            Qt.Key_A: self._addNewNode,
+            Qt.Key_C: self._connectNodes,
+            Qt.Key_S: self._setTargetNode,
+            Qt.Key_0: self._clearPath,
+            Qt.Key_1: self._runDFS,
+            Qt.Key_2: self._runBFS,
+            Qt.Key_3: self._runDijkstra,
+            Qt.Key_4: self._runAstar
+            }
+
         self._nodes = {}
         self._edges = {}
         self._begin = 0
@@ -98,6 +109,100 @@ class Scene(QGraphicsScene):
         self.addItem(item)
         item.setPos(0, 50)
 
+    def _addNewNode(self):
+        new_node = graph.graph.add_node(1)
+
+        item = diagram.Node()
+        item.set_id(new_node.id())
+        self._nodes[new_node.id()] = item
+        self.addItem(item)
+
+        scene_position = self._view.mapToScene(self._view.mapFromGlobal(QCursor.pos()))
+        item.setPos(scene_position)
+
+    def _connectNodes(self):
+        if self.selectedItems():
+            selected = self.selectedItems()[-1]
+            scene_position = self._view.mapToScene(self._view.mapFromGlobal(QCursor.pos()))
+            items_under_cursor = self.items(scene_position, Qt.ContainsItemShape, Qt.AscendingOrder)
+            if items_under_cursor:
+                for item in items_under_cursor:
+                    if isinstance(item, diagram.Node):
+                        if item.id() != selected.id():
+                            edge = graph.graph.connect_nodes(selected.id(), item.id(),
+                                                             graph.EdgeDirection.STRAIGHT, 1)
+                            if edge.id() in self._edges:
+                                self.edge(edge.id()).initialize(edge.id())
+                            else:
+                                new_item = diagram.Edge()
+                                self._edges[edge.id()] = new_item
+                                self.addItem(new_item)
+                                new_item.initialize(edge.id())
+                        break
+
+    def _setTargetNode(self):
+        call_update = False
+        if self._end != 0:
+            call_update = True
+            self._cleanHighlight()
+            self._begin = 0
+            self._end = 0
+        if self.selectedItems():
+            scene_position = self._view.mapToScene(self._view.mapFromGlobal(QCursor.pos()))
+            items_under_cursor = self.items(scene_position, Qt.ContainsItemShape, Qt.AscendingOrder)
+            if not items_under_cursor:
+                self._begin = 0
+                if self._end != 0:
+                    call_update = True
+                    self._cleanHighlight()
+                    self._end = 0
+            else:
+                self._begin = self.selectedItems()[-1].id()
+                for item in items_under_cursor:
+                    if isinstance(item, diagram.Node):
+                        if item.id() != self._begin:
+                            self._end = item.id()
+                            call_update = True
+                            item.highlight(Qt.red)
+        if call_update:
+            self.update()
+
+    def _runDFS(self):
+        # Depth-First Search
+        path = self._runSearch(dfs)
+        if path:
+            self._cleanHighlight()
+            self._highlightPath(path)
+            self.update()
+
+    def _runBFS(self):
+        # Breadth-First Search
+        path = self._runSearch(bfs)
+        if path:
+            self._cleanHighlight()
+            self._highlightPath(path)
+            self.update()
+
+    def _runDijkstra(self):
+        # Dijkstra's Search
+        path = self._runSearch(dijkstra)
+        if path:
+            self._cleanHighlight()
+            self._highlightPath(path)
+            self.update()
+
+    def _runAstar(self):
+        # A* Search
+        path = self._runSearch(None)
+        if path:
+            self._cleanHighlight()
+            self._highlightPath(path)
+            self.update()
+
+    def _clearPath(self):
+        self._cleanHighlight()
+        self.update()
+
     def mousePressEvent(self, event):
         global _keysPressed
         if Qt.Key_Control in _keysPressed:
@@ -113,92 +218,8 @@ class Scene(QGraphicsScene):
         global _keysPressed
         k = event.key()
         _keysPressed.append(k)
-        if k == Qt.Key_A:
-            new_node = graph.graph.add_node(1)
-
-            item = diagram.Node()
-            item.set_id(new_node.id())
-            self._nodes[new_node.id()] = item
-            self.addItem(item)
-
-            scene_position = self._view.mapToScene(self._view.mapFromGlobal(QCursor.pos()))
-            item.setPos(scene_position)
-        elif k == Qt.Key_C:
-            if self.selectedItems():
-                selected = self.selectedItems()[-1]
-                scene_position = self._view.mapToScene(self._view.mapFromGlobal(QCursor.pos()))
-                items_under_cursor = self.items(scene_position, Qt.ContainsItemShape, Qt.AscendingOrder)
-                if items_under_cursor:
-                    for item in items_under_cursor:
-                        if isinstance(item, diagram.Node):
-                            if item.id() != selected.id():
-                                edge = graph.graph.connect_nodes(selected.id(), item.id(),
-                                                                 graph.EdgeDirection.STRAIGHT, 1)
-                                if edge.id() in self._edges:
-                                    self.edge(edge.id()).initialize(edge.id())
-                                else:
-                                    new_item = diagram.Edge()
-                                    self._edges[edge.id()] = new_item
-                                    self.addItem(new_item)
-                                    new_item.initialize(edge.id())
-                            break
-        elif k == Qt.Key_S:
-            call_update = False
-            if self._end != 0:
-                call_update = True
-                self._cleanHighlight()
-                self._begin = 0
-                self._end = 0
-            if self.selectedItems():
-                scene_position = self._view.mapToScene(self._view.mapFromGlobal(QCursor.pos()))
-                items_under_cursor = self.items(scene_position, Qt.ContainsItemShape, Qt.AscendingOrder)
-                if not items_under_cursor:
-                    self._begin = 0
-                    if self._end != 0:
-                        call_update = True
-                        self._cleanHighlight()
-                        self._end = 0
-                else:
-                    self._begin = self.selectedItems()[-1].id()
-                    for item in items_under_cursor:
-                        if isinstance(item, diagram.Node):
-                            if item.id() != self._begin:
-                                self._end = item.id()
-                                call_update = True
-                                item.highlight(Qt.red)
-            if call_update:
-                self.update()
-        elif k == Qt.Key_1:
-            # Depth-First Search
-            path = self._runSearch(dfs)
-            if path:
-                self._cleanHighlight()
-                self._highlightPath(path)
-                self.update()
-        elif k == Qt.Key_2:
-            # Breadth-First Search
-            path = self._runSearch(bfs)
-            if path:
-                self._cleanHighlight()
-                self._highlightPath(path)
-                self.update()
-        elif k == Qt.Key_3:
-            # Dijkstra's Search
-            path = self._runSearch(dijkstra)
-            if path:
-                self._cleanHighlight()
-                self._highlightPath(path)
-                self.update()
-        elif k == Qt.Key_4:
-            # A* Search
-            path = self._runSearch(None)
-            if path:
-                self._cleanHighlight()
-                self._highlightPath(path)
-                self.update()
-        elif k == Qt.Key_0:
-            self._cleanHighlight()
-            self.update()
+        if k in self._keyHandlers:
+            self._keyHandlers[k]()
         if k != Qt.Key_Control:
             QGraphicsScene.keyPressEvent(self, event)
 
