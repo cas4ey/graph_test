@@ -55,8 +55,11 @@ def breadth_first_search(begin, end, graph):
     path = []
     queue = [start]
     finish_found = False
+    iterations = 0
 
     while queue and not finish_found:
+
+        iterations += 1
 
         current = queue.pop(0)
         edges = current.edges()
@@ -102,7 +105,7 @@ def breadth_first_search(begin, end, graph):
 
             resulting_path.reverse()
 
-        return Path(resulting_path)
+        return Path(resulting_path, iterations)
 
     return Path()
 

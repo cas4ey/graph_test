@@ -41,6 +41,7 @@ from graph import graph
 from graph.depth_first_search import depth_first_search as dfs
 from graph.breadth_first_search import breadth_first_search as bfs
 from graph.dijkstra_search import dijkstra_search as dijkstra
+from graph.astar_search import astar_search as astar
 import diagram
 
 #######################################################################################################################
@@ -130,6 +131,7 @@ class Scene(QGraphicsScene):
         item.set_id(new_node.id())
         self._nodes[new_node.id()] = item
         self.addItem(item)
+        new_node.set_data(item)
 
         scene_position = self._view.mapToScene(self._view.mapFromGlobal(QCursor.pos()))
         item.setPos(scene_position)
@@ -188,6 +190,7 @@ class Scene(QGraphicsScene):
             self._cleanHighlight()
             self._highlightPath(path)
             self.update()
+            print('iterations = %d // DFS' % path.iterations())
 
     def _runBFS(self):
         # Breadth-First Search
@@ -196,6 +199,7 @@ class Scene(QGraphicsScene):
             self._cleanHighlight()
             self._highlightPath(path)
             self.update()
+            print('iterations = %d // BFS' % path.iterations())
 
     def _runDijkstra(self):
         # Dijkstra's Search
@@ -204,14 +208,16 @@ class Scene(QGraphicsScene):
             self._cleanHighlight()
             self._highlightPath(path)
             self.update()
+            print('iterations = %d // Dijkstra' % path.iterations())
 
     def _runAstar(self):
         # A* Search
-        path = self._runSearch(None)
+        path = self._runSearch(astar)
         if path:
             self._cleanHighlight()
             self._highlightPath(path)
             self.update()
+            print('iterations = %d // A*' % path.iterations())
 
     def _clearPath(self):
         self._cleanHighlight()
