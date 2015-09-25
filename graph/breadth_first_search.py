@@ -42,9 +42,11 @@ from .graph import Path
 
 
 def breadth_first_search(begin, end, graph):
+
     start = graph.node(begin)
     if start is None:
         return Path()
+
     finish = graph.node(end)
     if finish is None or finish.id() == start.id():
         return Path()
@@ -53,39 +55,55 @@ def breadth_first_search(begin, end, graph):
     path = []
     queue = [start]
     finish_found = False
+
     while queue and not finish_found:
+
         current = queue.pop(0)
         edges = current.edges()
+
         for uid in edges:
+
             edge = graph.edge(uid)
             if edge is None:
                 continue
+
             edge_info = edges[uid]
             if edge_info.tail() in visited_nodes:
                 continue
+
             head = graph.node(edge_info.head())
             tail = graph.node(edge_info.tail())
             if head is None or tail is None:
                 continue
+
             path.append((current, tail, edge))
             if tail.id() == finish.id():
                 finish_found = True
                 break
+
             queue.append(tail)
             visited_nodes.append(tail.id())
+
     if finish_found and path:
+
         resulting_path = [path[-1]]
         if len(path) > 1:
+
             prev_id = path[-1][0].id()
             for i in range(-2, -(len(path) + 1), -1):
+
                 head, tail, edge = path[i]
                 if tail.id() == prev_id:
+
                     resulting_path.append(path[i])
                     prev_id = head.id()
                     if prev_id == start.id():
                         break
+
             resulting_path.reverse()
+
         return Path(resulting_path)
+
     return Path()
 
 #######################################################################################################################

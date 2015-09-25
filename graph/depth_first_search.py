@@ -50,9 +50,11 @@ class _StackEntry(object):
 
 
 def depth_first_search(begin, end, graph):
+
     start = graph.node(begin)
     if start is None:
         return Path()
+
     finish = graph.node(end)
     if finish is None or finish.id() == start.id():
         return Path()
@@ -60,35 +62,45 @@ def depth_first_search(begin, end, graph):
     visited_nodes = [start.id()]
     path = []
     stack = [_StackEntry(start, iter(start.edges()))]
+
     while stack:
+
         go_next = False
         current = stack[-1]
         edges = current.node.edges()
+
         for uid in current.keys:
+
             edge = graph.edge(uid)
             if edge is None:
                 continue
+
             edge_info = edges[uid]
             if edge_info.tail() in visited_nodes:
                 continue
+
             head = graph.node(edge_info.head())
             tail = graph.node(edge_info.tail())
             if head is None or tail is None:
                 continue
+
             entry = (head, tail, edge)
             path.append(entry)
             if tail.id() == finish.id():
                 return Path(path)
+
             go_next = True
             stack.append(_StackEntry(tail, iter(tail.edges())))
             visited_nodes.append(tail.id())
             break
+
         if not go_next:
             stack.pop()
             try:
                 path.pop()
             except IndexError:
                 pass
+
     return Path()
 
 #######################################################################################################################
