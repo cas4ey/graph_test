@@ -63,6 +63,7 @@ class Scene(QGraphicsScene):
         self._view = parent
 
         self._keyHandlers = {
+            Qt.Key_F1: self._showHelp,
             Qt.Key_A: self._addNewNode,
             Qt.Key_C: self._connectNodes,
             Qt.Key_S: self._setTargetNode,
@@ -108,6 +109,19 @@ class Scene(QGraphicsScene):
         item = diagram.Node()
         self.addItem(item)
         item.setPos(0, 50)
+
+    def _showHelp(self):
+        QMessageBox.information(None, 'Hot keys', '\'F1\' = show this window\n'
+                                                  '\'A\' = add new node under mouse cursor\n'
+                                                  '\'C\' = connect selected node with node under mouse cursor\n'
+                                                  '\'Mouse double click\' = select node under cursor\n'
+                                                  '\'S\' = set node under cursor as target node of search algorithm. \
+                                                  Start node is current selected node and it must be selected already.\n'
+                                                  '\'0\' = clear current path\n'
+                                                  '\'1\' = Depth first search\n'
+                                                  '\'2\' = Breadth first search\n'
+                                                  '\'3\' = Dijkstra\'s search\n'
+                                                  '\'4\' = A* search')
 
     def _addNewNode(self):
         new_node = graph.graph.add_node(1)
@@ -273,7 +287,9 @@ class View(QGraphicsView):
         self._mousePressPosition = QPoint()
         self._scrolling = False
         self.setScene(Scene(self))
-        QTimer().singleShot(10, lambda: self.centerOn(0, 0))
+        self._hintText = QGraphicsSimpleTextItem('Press F1 to see help!', None)
+        self.scene().addItem(self._hintText)
+        QTimer().singleShot(10, lambda: [self.centerOn(0, 0), self._updateHintPosition()])
 
     def mousePressEvent(self, event):
         global _keysPressed
@@ -307,6 +323,7 @@ class View(QGraphicsView):
                 # self.horizontalScrollBar().setProperty('moving', True)
                 # self.verticalScrollBar().setStyle(QApplication.style())
                 # self.horizontalScrollBar().setStyle(QApplication.style())
+            self._updateHintPosition()
         QGraphicsView.mouseMoveEvent(self, event)
 
     def wheelEvent(self, event):
@@ -331,4 +348,8 @@ class View(QGraphicsView):
             #     self.bgTransform = None
             # if -1 < globals.background < len(globals.backgrounds):
             #     self.__onBackgroundChange(globals.background)
+            self._updateHintPosition()
+
+    def _updateHintPosition(self):
+        self._hintText.setPos(self.mapToScene(QPoint(10, 10)))
 
