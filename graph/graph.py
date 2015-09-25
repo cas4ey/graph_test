@@ -231,6 +231,9 @@ class Graph(object):
     def edge(self, identifier):
         return self._edges.get(identifier, None)
 
+    def nodes(self):
+        return self._nodes
+
     def remove_edge(self, identifier):
         if identifier in self._edges:
             self._edges[identifier].disconnect()

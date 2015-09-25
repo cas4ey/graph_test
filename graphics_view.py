@@ -40,6 +40,7 @@ from PySide.QtGui import *
 from graph import graph
 from graph.depth_first_search import depth_first_search as dfs
 from graph.breadth_first_search import breadth_first_search as bfs
+from graph.dijkstra_search import dijkstra_search as dijkstra
 import diagram
 
 #######################################################################################################################
@@ -183,7 +184,7 @@ class Scene(QGraphicsScene):
                 self.update()
         elif k == Qt.Key_3:
             # Dijkstra's Search
-            path = self._runSearch(None)
+            path = self._runSearch(dijkstra)
             if path:
                 self._cleanHighlight()
                 self._highlightPath(path)
