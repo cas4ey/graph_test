@@ -62,8 +62,11 @@ def depth_first_search(begin, end, graph):
     visited_nodes = [start.id()]
     path = []
     stack = [_StackEntry(start, iter(start.edges()))]
+    iterations = 0
 
     while stack:
+
+        iterations += 1
 
         go_next = False
         current = stack[-1]
@@ -87,7 +90,7 @@ def depth_first_search(begin, end, graph):
             entry = (head, tail, edge)
             path.append(entry)
             if tail.id() == finish.id():
-                return Path(path)
+                return Path(path, iterations)
 
             go_next = True
             stack.append(_StackEntry(tail, iter(tail.edges())))

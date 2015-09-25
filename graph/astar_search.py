@@ -1,7 +1,7 @@
 # coding=utf-8
 # -----------------
-# file      : dijkstra_search.py
-# date      : 2015/09/22
+# file      : astar_search.py
+# date      : 2015/09/25
 # author    : Victor Zarubkin
 # contact   : victor.zarubkin@gmail.com
 # copyright : Copyright (C) 2015  Victor Zarubkin
@@ -37,12 +37,13 @@ __email__ = 'victor.zarubkin@gmail.com'
 
 from .graph import Path
 from sortedcontainers.sortedlistwithkey import SortedListWithKey as sortedList
+from PySide.QtCore import QLineF
 
 #######################################################################################################################
 #######################################################################################################################
 
 
-class _DijkstraNode(object):
+class _AstarNode(object):
 
     def __init__(self, node, cost, parent, edge):
         object.__init__(self)
@@ -52,6 +53,7 @@ class _DijkstraNode(object):
         self.parent = parent
         self.edge = edge
         self.cost = cost
+        self.heuristics_cost = None
 
     def __lt__(self, other):
         return self.cost < other.cost
@@ -60,7 +62,11 @@ class _DijkstraNode(object):
         return self.id == other.id
 
 
-def dijkstra_search(begin, end, graph):
+def astar_heuristics(current_node, target_node):
+    return int(QLineF(current_node.data().pos(), target_node.data().pos()).length())
+
+
+def astar_search(begin, end, graph):
 
     start = graph.node(begin)
     if start is None:
@@ -74,7 +80,7 @@ def dijkstra_search(begin, end, graph):
     for node_id in graph.nodes():
         node = graph.node(node_id)
         cost = 0 if node_id == begin else 1e28
-        nodes[node_id] = _DijkstraNode(node, cost, None, None)
+        nodes[node_id] = _AstarNode(node, cost, None, None)
 
     visited_nodes = []
     priority_queue = sortedList([nodes[start.id()]], key=lambda x: x.cost, load=len(nodes))
@@ -102,7 +108,10 @@ def dijkstra_search(begin, end, graph):
             if tail is None:
                 continue
 
-            cost = current.cost + edge.weight() + tail.node.weight()
+            if tail.heuristics_cost is None:
+                tail.heuristics_cost = astar_heuristics(tail.node, finish)
+
+            cost = current.cost + edge.weight() + tail.node.weight() + tail.heuristics_cost
             if cost < tail.cost:
                 tail.cost = cost
                 tail.parent_id = current.id
@@ -112,6 +121,10 @@ def dijkstra_search(begin, end, graph):
                 priority_queue.add(tail)
             elif tail not in priority_queue:
                 priority_queue.add(tail)
+
+            if tail.id == end:
+                del priority_queue[:]
+                break
 
     path = []
     current = nodes[end]

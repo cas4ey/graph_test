@@ -319,10 +319,11 @@ class Graph(object):
 
 class Path(object):
 
-    def __init__(self, path=[]):
+    def __init__(self, path=[], iterations=0):
         object.__init__(self)
         self._path = []
         self._totalWeight = 0
+        self._iterations = iterations
         for head, tail, edge in path:
             self.append(head, tail, edge)
 
@@ -337,6 +338,9 @@ class Path(object):
 
     def __iter__(self, *args, **kwargs):
         return self._path.__iter__(*args, **kwargs)
+
+    def iterations(self):
+        return self._iterations
 
     def total_weight(self):
         return self._totalWeight
