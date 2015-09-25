@@ -36,6 +36,7 @@ __email__ = 'victor.zarubkin@gmail.com'
 ############################################################################
 
 from .graph import Path
+from sortedcontainers.sortedlistwithkey import SortedListWithKey as sortedList
 
 #######################################################################################################################
 #######################################################################################################################
@@ -52,11 +53,19 @@ class _DijkstraNode(object):
         self.edge = edge
         self.cost = cost
 
+    def __lt__(self, other):
+        return self.cost < other.cost
+
+    def __eq__(self, other):
+        return self.id == other.id
+
 
 def dijkstra_search(begin, end, graph):
+
     start = graph.node(begin)
     if start is None:
         return Path()
+
     finish = graph.node(end)
     if finish is None or finish.id() == start.id():
         return Path()
@@ -64,40 +73,53 @@ def dijkstra_search(begin, end, graph):
     nodes = {}
     for node_id in graph.nodes():
         node = graph.node(node_id)
-        nodes[node_id] = _DijkstraNode(node, 1e28, None, None)
+        cost = 0 if node_id == begin else 1e28
+        nodes[node_id] = _DijkstraNode(node, cost, None, None)
 
-    visited_nodes = [start.id()]
-    path = []
-    stack = [_StackEntry(start, iter(start.edges()))]
-    while stack:
-        go_next = False
-        current = stack[-1]
+    visited_nodes = []
+    priority_queue = sortedList([nodes[start.id()]], key=lambda x: x.cost, load=len(nodes))
+
+    while priority_queue:
+
+        current = priority_queue.pop(0)
+        visited_nodes.append(current.id)
         edges = current.node.edges()
-        for uid in current.keys:
-            edge = graph.edge(uid)
+
+        for edge_id in edges:
+
+            edge = graph.edge(edge_id)
             if edge is None:
                 continue
-            edge_info = edges[uid]
+
+            edge_info = edges[edge_id]
             if edge_info.tail() in visited_nodes:
                 continue
-            head = graph.node(edge_info.head())
-            tail = graph.node(edge_info.tail())
-            if head is None or tail is None:
+
+            tail = nodes.get(edge_info.tail(), None)
+            if tail is None:
                 continue
-            entry = (head, tail, edge)
-            path.append(entry)
-            if tail.id() == finish.id():
-                return Path(path)
-            go_next = True
-            stack.append(_StackEntry(tail, iter(tail.edges())))
-            visited_nodes.append(tail.id())
-            break
-        if not go_next:
-            stack.pop()
-            try:
-                path.pop()
-            except IndexError:
-                pass
+
+            cost = current.cost + edge.weight() + tail.node.weight()
+            if cost < tail.cost:
+                tail.cost = cost
+                tail.parent_id = current.id
+                tail.parent = current.node
+                tail.edge = edge
+                priority_queue.discard(tail)
+                priority_queue.add(tail)
+            elif tail not in priority_queue:
+                priority_queue.add(tail)
+
+    path = []
+    current = nodes[end]
+    while current.parent_id != 0 and current.edge is not None:
+        path.append((current.parent, current.node, current.edge))
+        current = nodes[current.parent_id]
+
+    if path and current.id == begin:
+        path.reverse()
+        return Path(path)
+
     return Path()
 
 #######################################################################################################################
