@@ -148,6 +148,7 @@ class Edge(QGraphicsLineItem):
         self._beginPoint = QPointF()
         self._endPoint = QPointF()
         self._path = QPainterPath()
+        self._text = None
 
         self.setZValue(-10)
 
@@ -164,7 +165,12 @@ class Edge(QGraphicsLineItem):
     def _calculate(self):
         p1 = self.mapFromItem(self._begin, 0, 0)
         p2 = self.mapFromItem(self._end, 0, 0)
-        line = QLineF(p1, p2).unitVector()
+        line = QLineF(p1, p2)
+        distance = line.length()
+        line = line.unitVector()
+        center = line.unitVector()
+        center.setLength(distance * 0.5)
+        center = center.p2()
         line.setLength(self._begin.radius())
         self._beginPoint = line.p2()
         line = QLineF(p2, p1).unitVector()
@@ -196,6 +202,15 @@ class Edge(QGraphicsLineItem):
             arrow.append(line.p1())
             arrow.append(p2)
             self._path.addPolygon(arrow)
+        edge = graph.edge(self._id)
+        if edge is not None:
+            w = int(max(distance, 1))
+            edge.set_base_weight(w)
+            if self._text is None:
+                self._text = QGraphicsSimpleTextItem(str(w), self)
+            else:
+                self._text.setText(str(w))
+            self._text.setPos(center)
 
     def initialize(self, edge_id):
         edge = graph.edge(edge_id)
