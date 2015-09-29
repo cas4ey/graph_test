@@ -41,6 +41,8 @@ from sortedcontainers.sortedlistwithkey import SortedListWithKey as sortedList
 #######################################################################################################################
 #######################################################################################################################
 
+_infinite_weight = 1e28
+
 
 class _DijkstraNode(object):
 
@@ -62,6 +64,8 @@ class _DijkstraNode(object):
 
 def dijkstra_search(begin, end, graph):
 
+    global _infinite_weight
+
     start = graph.node(begin)
     if start is None:
         return Path()
@@ -73,12 +77,17 @@ def dijkstra_search(begin, end, graph):
     nodes = {}
     for node_id in graph.nodes():
         node = graph.node(node_id)
-        cost = 0 if node_id == begin else 1e28
+        cost = 0 if node_id == begin else _infinite_weight
         nodes[node_id] = _DijkstraNode(node, cost, None, None)
 
     visited_nodes = []
     priority_queue = sortedList([nodes[start.id()]], key=lambda x: x.cost, load=len(nodes))
     iterations = 0
+
+    # "resulting_cost" is used to reduce total number of visited nodes.
+    # Explanation: when you have already found target node you can check if other search paths are shorter than
+    # the found one, and if not then there is no need to explore such path further.
+    resulting_cost = _infinite_weight
 
     while priority_queue:
 
@@ -103,14 +112,18 @@ def dijkstra_search(begin, end, graph):
                 continue
 
             cost = current.cost + edge.weight() + tail.node.weight()
+            if tail.id == end:
+                resulting_cost = min(cost, resulting_cost)
+
             if cost < tail.cost:
                 tail.cost = cost
                 tail.parent_id = current.id
                 tail.parent = current.node
                 tail.edge = edge
                 priority_queue.discard(tail)
-                priority_queue.add(tail)
-            elif tail not in priority_queue:
+                if cost < resulting_cost:
+                    priority_queue.add(tail)
+            elif cost < resulting_cost and tail not in priority_queue:
                 priority_queue.add(tail)
 
     path = []
