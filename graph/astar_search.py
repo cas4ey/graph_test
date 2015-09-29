@@ -42,6 +42,8 @@ from PySide.QtCore import QLineF
 #######################################################################################################################
 #######################################################################################################################
 
+_infinite_weight = 1e28
+
 
 class _AstarNode(object):
 
@@ -68,6 +70,8 @@ def astar_heuristics(current_node, target_node):
 
 def astar_search(begin, end, graph):
 
+    global _infinite_weight
+
     start = graph.node(begin)
     if start is None:
         return Path()
@@ -79,7 +83,7 @@ def astar_search(begin, end, graph):
     nodes = {}
     for node_id in graph.nodes():
         node = graph.node(node_id)
-        cost = 0 if node_id == begin else 1e28
+        cost = 0 if node_id == begin else _infinite_weight
         nodes[node_id] = _AstarNode(node, cost, None, None)
 
     visited_nodes = []
